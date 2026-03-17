@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <color name="purple_primary">#534AB7</color>
+    <color name="teal_secondary">#0F6E56</color>
+
+    <color name="priority_low">#4CAF50</color>
+    <color name="priority_medium">#FFC107</color>
+    <color name="priority_high">#FF5722</color>
+    <color name="priority_urgent">#E53935</color>
+</resources>
