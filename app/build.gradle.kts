@@ -1,12 +1,12 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-    id("kotlin-kapt") // ✅ kapt não usa alias(), usa id()
+    id("kotlin-kapt")
 }
 
 android {
     namespace = "com.example.myapplication"
-    compileSdk = 36 // ✅ sintaxe correta, sem chaves nem release()
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.myapplication"
@@ -51,7 +51,8 @@ dependencies {
 
     // ── Room ───────────────────────────────────────────────────────────────
     implementation(libs.androidx.room.runtime)
-    kapt(libs.androidx.room.compiler) // ✅ kapt, não annotationProcessor
+    implementation(libs.androidx.room.ktx) // ✅ ADICIONADO PARA COROUTINES
+    kapt(libs.androidx.room.compiler)
 
     // ── Navigation ─────────────────────────────────────────────────────────
     implementation(libs.androidx.navigation.fragment)

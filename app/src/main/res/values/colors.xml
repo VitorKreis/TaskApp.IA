@@ -3,11 +3,20 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <color name="purple_primary">#534AB7</color>
-    <color name="teal_secondary">#0F6E56</color>
+    <!-- Modern Soft Palette -->
+    <color name="primary">#2D5AF0</color>
+    <color name="primary_variant">#1A43BF</color>
+    <color name="secondary">#00C853</color>
+    <color name="background_light">#F8F9FE</color>
+    <color name="surface_card">#FFFFFF</color>
 
-    <color name="priority_low">#4CAF50</color>
-    <color name="priority_medium">#FFC107</color>
-    <color name="priority_high">#FF5722</color>
-    <color name="priority_urgent">#E53935</color>
+    <!-- Priority Colors -->
+    <color name="priority_low">#81C784</color>
+    <color name="priority_medium">#FFD54F</color>
+    <color name="priority_high">#FF8A65</color>
+    <color name="priority_urgent">#E57373</color>
+
+    <!-- Text Colors -->
+    <color name="text_primary">#1C1B1F</color>
+    <color name="text_secondary">#49454F</color>
 </resources>

@@ -6,8 +6,8 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.MenuItem
 import android.view.View
+import android.widget.AutoCompleteTextView
 import android.widget.ArrayAdapter
-import android.widget.Spinner
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
@@ -20,18 +20,20 @@ import java.util.Locale
 
 class AddEditTaskActivity : AppCompatActivity() {
 
-    private lateinit var etTitle        : TextInputEditText
-    private lateinit var etDescription  : TextInputEditText
-    private lateinit var spinnerPriority: Spinner
-    private lateinit var tvSelectedDate : TextView
-    private lateinit var btnPickDate    : MaterialButton
-    private lateinit var btnClearDate   : MaterialButton
-    private lateinit var btnSave        : MaterialButton
+    private lateinit var etTitle            : TextInputEditText
+    private lateinit var etDescription      : TextInputEditText
+    private lateinit var spinnerPriorityAuto: AutoCompleteTextView
+    private lateinit var tvSelectedDate     : TextView
+    private lateinit var btnPickDate        : MaterialButton
+    private lateinit var btnClearDate       : MaterialButton
+    private lateinit var btnSave            : MaterialButton
 
     private var editingTaskId  : Long? = null
     private var selectedDueDate: Long? = null
+    private var selectedPriority: Int = 1 // Média padrão
 
     private val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+    private val priorities = listOf("Baixa", "Média", "Alta", "Urgente")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,26 +44,27 @@ class AddEditTaskActivity : AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         // Views
-        etTitle         = findViewById(R.id.et_title)
-        etDescription   = findViewById(R.id.et_description)
-        spinnerPriority = findViewById(R.id.spinner_priority)
-        tvSelectedDate  = findViewById(R.id.tv_selected_date)
-        btnPickDate     = findViewById(R.id.btn_pick_date)
-        btnClearDate    = findViewById(R.id.btn_clear_date)
-        btnSave         = findViewById(R.id.btn_save)
+        etTitle             = findViewById(R.id.et_title)
+        etDescription       = findViewById(R.id.et_description)
+        spinnerPriorityAuto = findViewById(R.id.spinner_priority_auto)
+        tvSelectedDate      = findViewById(R.id.tv_selected_date)
+        btnPickDate         = findViewById(R.id.btn_pick_date)
+        btnClearDate        = findViewById(R.id.btn_clear_date)
+        btnSave             = findViewById(R.id.btn_save)
 
-        // Spinner
-        spinnerPriority.adapter = ArrayAdapter(
-            this, android.R.layout.simple_spinner_dropdown_item,
-            listOf("Baixa", "Média", "Alta", "Urgente")
-        )
-        spinnerPriority.setSelection(1) // Média padrão
+        // Modern Exposed Dropdown (Prioridades)
+        val adapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, priorities)
+        spinnerPriorityAuto.setAdapter(adapter)
+        spinnerPriorityAuto.setText(priorities[selectedPriority], false)
+        spinnerPriorityAuto.setOnItemClickListener { _, _, position, _ ->
+            selectedPriority = position
+        }
 
         // Date picker
         btnPickDate.setOnClickListener { showDateTimePicker() }
         btnClearDate.setOnClickListener {
             selectedDueDate = null
-            tvSelectedDate.text = "Sem prazo"
+            tvSelectedDate.text = "Sem prazo definido"
             btnClearDate.visibility = View.GONE
         }
 
@@ -69,11 +72,9 @@ class AddEditTaskActivity : AppCompatActivity() {
         btnSave.setOnClickListener { saveTask() }
 
         // Carregar tarefa se for edição
-        val id = intent.getLongExtra(MainActivity.EXTRA_TASK_ID, -1L)
+        val id = intent.getLongExtra("EXTRA_TASK_ID", -1L)
         if (id != -1L) loadTask(id)
     }
-
-    // ── Date/time picker ───────────────────────────────────────────────────
 
     private fun showDateTimePicker() {
         val cal = Calendar.getInstance().apply {
@@ -96,8 +97,6 @@ class AddEditTaskActivity : AppCompatActivity() {
         }, cal.get(Calendar.YEAR), cal.get(Calendar.MONTH), cal.get(Calendar.DAY_OF_MONTH)).show()
     }
 
-    // ── Salvar ─────────────────────────────────────────────────────────────
-
     private fun saveTask() {
         val title = etTitle.text?.toString()?.trim().orEmpty()
         if (title.isEmpty()) {
@@ -108,29 +107,19 @@ class AddEditTaskActivity : AppCompatActivity() {
         setResult(RESULT_OK, Intent().apply {
             putExtra("title",       title)
             putExtra("description", etDescription.text?.toString()?.trim().orEmpty())
-            putExtra("priority",    spinnerPriority.selectedItemPosition)
+            putExtra("priority",    selectedPriority)
             putExtra("dueDate",     selectedDueDate ?: -1L)
             putExtra("taskId",      editingTaskId   ?: -1L)
         })
         finish()
     }
 
-    // ── Carregar para edição ───────────────────────────────────────────────
-
     private fun loadTask(id: Long) {
         editingTaskId = id
-        val task = TaskStore.findById(id) ?: return
-
+        // Placeholder até criarmos o Room / Repository
+        // val task = TaskStore.findById(id) ?: return
+        
         supportActionBar?.title = "Editar Tarefa"
-        etTitle.setText(task.title)
-        etDescription.setText(task.description)
-        spinnerPriority.setSelection(task.priority.ordinal)
-
-        task.dueDate?.let {
-            selectedDueDate = it
-            tvSelectedDate.text = sdf.format(Date(it))
-            btnClearDate.visibility = View.VISIBLE
-        }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
