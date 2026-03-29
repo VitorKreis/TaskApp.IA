@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.data.local.entity.TaskEntity
 import com.example.myapplication.presentation.viewmodel.TaskViewModel
+import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 class MainActivity : AppCompatActivity() {
@@ -49,6 +50,9 @@ class MainActivity : AppCompatActivity() {
         tvEmptyState = findViewById(R.id.tv_empty_state)
         val recyclerView = findViewById<RecyclerView>(R.id.recycler_tasks)
         val fab = findViewById<FloatingActionButton>(R.id.fab_add_task)
+        val toolbar = findViewById<MaterialToolbar>(R.id.toolbar)
+        toolbar.setNavigationIcon(androidx.appcompat.R.drawable.abc_ic_ab_back_material)
+        toolbar.setNavigationOnClickListener { finish() }
 
         // Setup Adapter
         adapter = TaskAdapter(

@@ -8,6 +8,9 @@ class TaskRepository(private val taskDao: TaskDao) {
 
     val allTasks: Flow<List<TaskEntity>> = taskDao.getAllTasks()
 
+    fun getOverdueTasks(currentTime: Long): Flow<List<TaskEntity>> =
+        taskDao.getOverdueTasks(currentTime)
+
     suspend fun insert(task: TaskEntity) {
         taskDao.insertTask(task)
     }
