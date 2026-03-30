@@ -1,17 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- Outer Circle -->
+
+    <!-- Glassmorphism circle outline -->
     <path
         android:fillColor="#00000000"
         android:pathData="M54,24c16.57,0 30,13.43 30,30s-13.43,30 -30,30 -30,-13.43 -30,-30 13.43,-30 30,-30"
-        android:strokeWidth="4"
-        android:strokeColor="#FFFFFF" />
-    <!-- Checkmark -->
+        android:strokeWidth="1.5"
+        android:strokeColor="#33FFFFFF" />
+
+    <!-- Bold checkmark with green→purple gradient -->
+    <path android:pathData="M47,64 L35,52 L31,56 L47,72 L77,40 L73,36 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="31"
+                android:startY="64"
+                android:endX="77"
+                android:endY="38">
+                <item android:offset="0.0" android:color="#FF1A5D3F" />
+                <item android:offset="1.0" android:color="#FF7C3AED" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- AI sparkle — 4-pointed star -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M46.5,62L36.5,52L33.5,55L46.5,68L74.5,40L71.5,37L46.5,62Z" />
+        android:fillColor="#CCFFFFFF"
+        android:pathData="M73,28 L74,31 L77,32 L74,33 L73,36 L72,33 L69,32 L72,31 Z" />
+
+    <!-- Small secondary sparkle -->
+    <path
+        android:fillColor="#66FFFFFF"
+        android:pathData="M33,38 L33.5,39.5 L35,40 L33.5,40.5 L33,42 L32.5,40.5 L31,40 L32.5,39.5 Z" />
 </vector>
