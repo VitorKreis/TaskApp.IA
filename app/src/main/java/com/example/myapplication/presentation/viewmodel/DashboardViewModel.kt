@@ -1,49 +1,46 @@
 package com.example.myapplication.presentation.viewmodel
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.asLiveData
-import androidx.lifecycle.map
-import com.example.myapplication.data.local.database.AppDatabase
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.myapplication.data.local.entity.TaskEntity
 import com.example.myapplication.data.repository.TaskRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import javax.inject.Inject
 
-class DashboardViewModel(application: Application) : AndroidViewModel(application) {
+@HiltViewModel
+class DashboardViewModel @Inject constructor(
+    repository: TaskRepository
+) : ViewModel() {
 
-    private val repository: TaskRepository
+    private val allTasks: StateFlow<List<TaskEntity>> = repository.allTasks
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    private val allTasksLd: LiveData<List<TaskEntity>>
+    val overdueTasks: StateFlow<List<TaskEntity>> =
+        repository.getOverdueTasks(System.currentTimeMillis())
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val overdueTasks: LiveData<List<TaskEntity>>
-    val totalCount: LiveData<Int>
-    val doneCount: LiveData<Int>
-    val pendingCount: LiveData<Int>
-    val overdueCount: LiveData<Int>
-    val priorityCounts: LiveData<Map<Int, Int>>
+    val totalCount: StateFlow<Int> = allTasks
+        .map { it.size }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
-    init {
-        val taskDao = AppDatabase.getDatabase(application).taskDao()
-        repository = TaskRepository(taskDao)
+    val doneCount: StateFlow<Int> = allTasks
+        .map { tasks -> tasks.count { it.isDone } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
-        allTasksLd = repository.allTasks.asLiveData()
-        overdueTasks = repository.getOverdueTasks(System.currentTimeMillis()).asLiveData()
+    val pendingCount: StateFlow<Int> = allTasks
+        .map { tasks -> tasks.count { !it.isDone } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
-        totalCount = allTasksLd.map { it.size }
+    val overdueCount: StateFlow<Int> = overdueTasks
+        .map { it.size }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
-        doneCount = allTasksLd.map { tasks ->
-            tasks.count { task -> task.isDone }
-        }
-
-        pendingCount = allTasksLd.map { tasks ->
-            tasks.count { task -> !task.isDone }
-        }
-
-        overdueCount = overdueTasks.map { it.size }
-
-        priorityCounts = allTasksLd.map { tasks ->
-            tasks.groupBy { task -> task.priority }.mapValues { entry -> entry.value.size }
-        }
-    }
+    val priorityCounts: StateFlow<Map<Int, Int>> = allTasks
+        .map { tasks -> tasks.groupBy { it.priority }.mapValues { it.value.size } }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 }
 

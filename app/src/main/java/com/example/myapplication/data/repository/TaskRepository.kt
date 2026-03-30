@@ -3,8 +3,11 @@ package com.example.myapplication.data.repository
 import com.example.myapplication.data.local.dao.TaskDao
 import com.example.myapplication.data.local.entity.TaskEntity
 import kotlinx.coroutines.flow.Flow
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class TaskRepository(private val taskDao: TaskDao) {
+@Singleton
+class TaskRepository @Inject constructor(private val taskDao: TaskDao) {
 
     val allTasks: Flow<List<TaskEntity>> = taskDao.getAllTasks()
 

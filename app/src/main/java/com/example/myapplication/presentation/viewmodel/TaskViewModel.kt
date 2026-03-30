@@ -1,48 +1,37 @@
 package com.example.myapplication.presentation.viewmodel
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.asLiveData
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.myapplication.data.local.database.AppDatabase
 import com.example.myapplication.data.local.entity.TaskEntity
 import com.example.myapplication.data.repository.TaskRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class TaskViewModel(application: Application) : AndroidViewModel(application) {
+@HiltViewModel
+class TaskViewModel @Inject constructor(
+    private val repository: TaskRepository
+) : ViewModel() {
 
-	private val repository: TaskRepository
+    val allTasks: StateFlow<List<TaskEntity>> = repository.allTasks
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-	val allTasks: LiveData<List<TaskEntity>>
+    fun insert(task: TaskEntity) {
+        viewModelScope.launch { repository.insert(task) }
+    }
 
-	init {
-		val taskDao = AppDatabase.getDatabase(application).taskDao()
-		repository = TaskRepository(taskDao)
-		allTasks = repository.allTasks.asLiveData()
-	}
+    fun update(task: TaskEntity) {
+        viewModelScope.launch { repository.update(task) }
+    }
 
-	fun insert(task: TaskEntity) {
-		viewModelScope.launch {
-			repository.insert(task)
-		}
-	}
+    fun delete(task: TaskEntity) {
+        viewModelScope.launch { repository.delete(task) }
+    }
 
-	fun update(task: TaskEntity) {
-		viewModelScope.launch {
-			repository.update(task)
-		}
-	}
-
-	fun delete(task: TaskEntity) {
-		viewModelScope.launch {
-			repository.delete(task)
-		}
-	}
-
-	fun getTaskById(id: Long, onResult: (TaskEntity?) -> Unit) {
-		viewModelScope.launch {
-			onResult(repository.getTaskById(id))
-		}
-	}
+    suspend fun getTaskById(id: Long): TaskEntity? {
+        return repository.getTaskById(id)
+    }
 }
