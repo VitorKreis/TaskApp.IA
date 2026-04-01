@@ -10,5 +10,7 @@ data class TaskEntity(
     val description: String,
     val priority: Int,
     val isDone: Boolean,
-    val dueDate: Long?
+    val dueDate: Long?,
+    val startTime: Long? = null,
+    val endTime: Long? = null
 )

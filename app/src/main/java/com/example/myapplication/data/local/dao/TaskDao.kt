@@ -23,4 +23,12 @@ interface TaskDao {
 
     @Query("SELECT * FROM tasks WHERE isDone = 0 AND dueDate IS NOT NULL AND dueDate < :currentTime ORDER BY dueDate ASC")
     fun getOverdueTasks(currentTime: Long): Flow<List<TaskEntity>>
+
+    @Query("""
+        SELECT * FROM tasks WHERE
+        (dueDate IS NOT NULL AND dueDate >= :startOfDay AND dueDate < :endOfDay)
+        OR (startTime IS NOT NULL AND startTime >= :startOfDay AND startTime < :endOfDay)
+        ORDER BY COALESCE(startTime, dueDate) ASC
+    """)
+    fun getTasksForDay(startOfDay: Long, endOfDay: Long): Flow<List<TaskEntity>>
 }

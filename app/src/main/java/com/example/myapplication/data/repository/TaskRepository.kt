@@ -14,6 +14,9 @@ class TaskRepository @Inject constructor(private val taskDao: TaskDao) {
     fun getOverdueTasks(currentTime: Long): Flow<List<TaskEntity>> =
         taskDao.getOverdueTasks(currentTime)
 
+    fun getTasksForDay(startOfDay: Long, endOfDay: Long): Flow<List<TaskEntity>> =
+        taskDao.getTasksForDay(startOfDay, endOfDay)
+
     suspend fun insert(task: TaskEntity) {
         taskDao.insertTask(task)
     }

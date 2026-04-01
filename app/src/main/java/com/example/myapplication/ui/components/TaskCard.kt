@@ -4,6 +4,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,7 +16,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccessTime
@@ -43,6 +43,7 @@ import java.util.Date
 import java.util.Locale
 
 private val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+private val timeFmt = SimpleDateFormat("HH:mm", Locale.getDefault())
 
 @Composable
 fun TaskCard(
@@ -166,6 +167,22 @@ fun TaskCard(
                                 text = sdf.format(Date(task.dueDate)),
                                 style = MaterialTheme.typography.labelMedium,
                                 color = if (isOverdue) OverdueRed else TextSecondary
+                            )
+                        }
+                    }
+
+                    // Time range (evento)
+                    if (task.startTime != null && task.endTime != null) {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(DarkGreen.copy(alpha = 0.15f))
+                                .padding(horizontal = 8.dp, vertical = 2.dp)
+                        ) {
+                            Text(
+                                text = "${timeFmt.format(Date(task.startTime))} – ${timeFmt.format(Date(task.endTime))}",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = DarkGreen
                             )
                         }
                     }
