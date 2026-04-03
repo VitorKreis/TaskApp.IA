@@ -33,7 +33,7 @@ class CalendarViewModel @Inject constructor(
     private val _selectedDate = MutableStateFlow(LocalDate.now())
     val selectedDate: StateFlow<LocalDate> = _selectedDate.asStateFlow()
 
-    // Tasks agrupadas por dia do mês (para mostrar dots no calendário)
+    // Recalcula os marcadores do calendário sempre que tarefas ou mês atual mudam.
     val tasksByDay: StateFlow<Map<Int, List<TaskEntity>>> = allTasks
         .map { tasks ->
             val month = _currentMonth.value
@@ -47,7 +47,7 @@ class CalendarViewModel @Inject constructor(
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyMap())
 
-    // Tasks do dia selecionado
+    // Troca automaticamente o stream da query quando o dia selecionado muda.
     @OptIn(ExperimentalCoroutinesApi::class)
     val tasksForSelectedDay: StateFlow<List<TaskEntity>> = _selectedDate
         .flatMapLatest { date ->
@@ -75,6 +75,7 @@ class CalendarViewModel @Inject constructor(
     }
 
     private fun getTaskLocalDate(task: TaskEntity, zone: ZoneId): LocalDate? {
+        // Para o calendário, priorizamos início do evento; se não existir, usamos o prazo.
         val millis = task.startTime ?: task.dueDate ?: return null
         return java.time.Instant.ofEpochMilli(millis).atZone(zone).toLocalDate()
     }

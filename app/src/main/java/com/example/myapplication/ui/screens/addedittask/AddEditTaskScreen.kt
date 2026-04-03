@@ -104,6 +104,7 @@ fun AddEditTaskScreen(
 
     LaunchedEffect(taskId) {
         if (isEditing && !loaded) {
+            // Preenche o formulário uma única vez ao abrir em modo edição.
             viewModel.getTaskById(taskId)?.let { task ->
                 title = task.title
                 description = task.description
@@ -120,6 +121,7 @@ fun AddEditTaskScreen(
     fun validateDates(): Boolean {
         val now = System.currentTimeMillis()
         if (!isEditing) {
+            // Na criação, bloqueia datas passadas para evitar tarefas já vencidas ao nascer.
             if (dueDate > 0 && dueDate < now) {
                 dateError = "O prazo nao pode ser no passado"
                 return false
@@ -456,6 +458,8 @@ fun AddEditTaskScreen(
                 onClick = {
                     if (title.isBlank()) { titleError = true; return@GradientButton }
                     if (!validateDates()) return@GradientButton
+
+                    // Converte valores "não definidos" (-1) para null antes de persistir no Room.
                     val task = TaskEntity(
                         id = if (isEditing) taskId else 0,
                         title = title.trim(),

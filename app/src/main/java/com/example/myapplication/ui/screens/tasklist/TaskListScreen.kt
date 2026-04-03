@@ -51,11 +51,13 @@ private enum class TaskFilter(val label: String) {
 @Composable
 fun TaskListScreen(
     viewModel: TaskViewModel,
+    initialFilter: Int = 0,
     onNavigateToAddTask: () -> Unit,
     onNavigateToEditTask: (Long) -> Unit
 ) {
     val allTasks by viewModel.allTasks.collectAsStateWithLifecycle()
-    var selectedFilter by remember { mutableIntStateOf(0) }
+    // Mantém contrato de índice com Dashboard/NavGraph: 0=ACTIVE, 1=ALL, 2=DONE, 3=OVERDUE.
+    var selectedFilter by remember { mutableIntStateOf(initialFilter) }
     val now = System.currentTimeMillis()
 
     val filteredTasks by remember(allTasks, selectedFilter) {

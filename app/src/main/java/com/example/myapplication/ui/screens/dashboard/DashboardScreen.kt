@@ -6,6 +6,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -65,7 +66,7 @@ import kotlinx.coroutines.delay
 @Composable
 fun DashboardScreen(
     viewModel: DashboardViewModel,
-    onNavigateToTaskList: () -> Unit,
+    onNavigateToTaskList: (filter: Int) -> Unit,
     onNavigateToAddTask: () -> Unit,
     onNavigateToEditTask: (Long) -> Unit
 ) {
@@ -120,6 +121,7 @@ fun DashboardScreen(
                                 value = totalCount.toString(),
                                 icon = Icons.AutoMirrored.Filled.Assignment,
                                 gradient = Brush.linearGradient(listOf(DarkGreen, DarkGreenDeep)),
+                                onClick = { onNavigateToTaskList(1) }, // ALL
                                 modifier = Modifier.weight(1f)
                             )
                             StatCard(
@@ -127,6 +129,7 @@ fun DashboardScreen(
                                 value = pendingCount.toString(),
                                 icon = Icons.Default.PendingActions,
                                 gradient = Brush.linearGradient(listOf(Purple, PurpleBright)),
+                                onClick = { onNavigateToTaskList(0) }, // ACTIVE
                                 modifier = Modifier.weight(1f)
                             )
                         }
@@ -139,6 +142,7 @@ fun DashboardScreen(
                                 value = doneCount.toString(),
                                 icon = Icons.Default.CheckCircle,
                                 gradient = Brush.linearGradient(listOf(SuccessGreen, DarkGreen)),
+                                onClick = { onNavigateToTaskList(2) }, // DONE
                                 modifier = Modifier.weight(1f)
                             )
                             StatCard(
@@ -146,6 +150,7 @@ fun DashboardScreen(
                                 value = overdueCount.toString(),
                                 icon = Icons.Default.Warning,
                                 gradient = Brush.linearGradient(listOf(OverdueRed, PriorityHigh)),
+                                onClick = { onNavigateToTaskList(3) }, // OVERDUE
                                 modifier = Modifier.weight(1f)
                             )
                         }
@@ -237,7 +242,7 @@ fun DashboardScreen(
                 Spacer(Modifier.height(4.dp))
                 GradientButton(
                     text = "Ver Todas as Tarefas",
-                    onClick = onNavigateToTaskList
+                    onClick = { onNavigateToTaskList(1) }
                 )
                 Spacer(Modifier.height(80.dp))
             }
@@ -253,6 +258,7 @@ private fun StatCard(
     value: String,
     icon: ImageVector,
     gradient: Brush,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -260,6 +266,7 @@ private fun StatCard(
             .clip(RoundedCornerShape(20.dp))
             .background(gradient)
             .border(1.dp, GlassBorder, RoundedCornerShape(20.dp))
+            .clickable(onClick = onClick)
             .padding(16.dp)
     ) {
         Column {

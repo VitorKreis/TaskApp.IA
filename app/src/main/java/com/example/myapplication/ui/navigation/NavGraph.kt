@@ -8,9 +8,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Dashboard
-import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -36,21 +36,23 @@ import com.example.myapplication.ui.screens.tasklist.TaskListScreen
 
 object Routes {
     const val DASHBOARD = "dashboard"
-    const val TASK_LIST = "taskList"
+    // O filtro é passado na rota para abrir TaskList já segmentada.
+    const val TASK_LIST = "taskList/{filter}"
     const val CALENDAR = "calendar"
     const val ADD_EDIT_TASK = "addEditTask/{taskId}"
 
+    fun taskList(filter: Int = 0) = "taskList/$filter"
     fun addEditTask(taskId: Long = -1L) = "addEditTask/$taskId"
 }
 
 private val bottomNavItems = listOf(
     BottomNavItem(route = Routes.DASHBOARD, label = "Dashboard", icon = Icons.Default.Dashboard),
-    BottomNavItem(route = Routes.TASK_LIST, label = "Tarefas", icon = Icons.AutoMirrored.Filled.Assignment),
-    BottomNavItem(route = Routes.CALENDAR, label = "Calendário", icon = Icons.Default.CalendarMonth),
+    BottomNavItem(route = Routes.taskList(0), label = "Tarefas", icon = Icons.AutoMirrored.Filled.Assignment),
+    BottomNavItem(route = Routes.CALENDAR, label = "Calendario", icon = Icons.Default.CalendarMonth),
 )
 
-// Rotas que mostram a bottom nav
-private val bottomNavRoutes = setOf(Routes.DASHBOARD, Routes.TASK_LIST, Routes.CALENDAR)
+// Rotas base que mostram a bottom nav (sem argumentos resolvidos).
+private val bottomNavBaseRoutes = setOf(Routes.DASHBOARD, Routes.TASK_LIST, Routes.CALENDAR)
 
 @Composable
 fun NavGraph() {
@@ -58,7 +60,13 @@ fun NavGraph() {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    val showBottomBar = currentRoute in bottomNavRoutes
+    val showBottomBar = currentRoute in bottomNavBaseRoutes
+
+    // A rota real pode vir como taskList/0, taskList/1...; normalizamos para manter highlight correto.
+    val selectedNavRoute = when {
+        currentRoute == Routes.TASK_LIST -> Routes.taskList(0)
+        else -> currentRoute
+    }
 
     Scaffold(
         containerColor = Color.Transparent,
@@ -66,7 +74,7 @@ fun NavGraph() {
             if (showBottomBar) {
                 BottomNavBar(
                     items = bottomNavItems,
-                    currentRoute = currentRoute,
+                    currentRoute = selectedNavRoute,
                     onItemClick = { item ->
                         navController.navigate(item.route) {
                             popUpTo(navController.graph.findStartDestination().id) {
@@ -93,16 +101,16 @@ fun NavGraph() {
                 popEnterTransition = { slideInHorizontally(initialOffsetX = { -it / 3 }) + fadeIn() },
                 popExitTransition = { slideOutHorizontally(targetOffsetX = { it }) + fadeOut() }
             ) {
-                // ── Dashboard ──────────────────────────────────────────────────
+                // Dashboard
                 composable(Routes.DASHBOARD) {
                     val viewModel: DashboardViewModel = hiltViewModel()
                     DashboardScreen(
                         viewModel = viewModel,
-                        onNavigateToTaskList = {
-                            navController.navigate(Routes.TASK_LIST) {
+                        onNavigateToTaskList = { filter ->
+                            navController.navigate(Routes.taskList(filter)) {
                                 popUpTo(navController.graph.findStartDestination().id) { saveState = true }
                                 launchSingleTop = true
-                                restoreState = true
+                                restoreState = false
                             }
                         },
                         onNavigateToAddTask = { navController.navigate(Routes.addEditTask()) },
@@ -110,17 +118,22 @@ fun NavGraph() {
                     )
                 }
 
-                // ── Task List ──────────────────────────────────────────────────
-                composable(Routes.TASK_LIST) {
+                // Task List (com filtro como argumento)
+                composable(
+                    route = Routes.TASK_LIST,
+                    arguments = listOf(navArgument("filter") { type = NavType.IntType; defaultValue = 0 })
+                ) { backStackEntry ->
                     val viewModel: TaskViewModel = hiltViewModel()
+                    val filter = backStackEntry.arguments?.getInt("filter") ?: 0
                     TaskListScreen(
                         viewModel = viewModel,
+                        initialFilter = filter,
                         onNavigateToAddTask = { navController.navigate(Routes.addEditTask()) },
                         onNavigateToEditTask = { id -> navController.navigate(Routes.addEditTask(id)) }
                     )
                 }
 
-                // ── Calendar ───────────────────────────────────────────────────
+                // Calendar
                 composable(Routes.CALENDAR) {
                     val viewModel: CalendarViewModel = hiltViewModel()
                     CalendarScreen(
@@ -130,7 +143,7 @@ fun NavGraph() {
                     )
                 }
 
-                // ── Add / Edit Task ────────────────────────────────────────────
+                // Add / Edit Task
                 composable(
                     route = Routes.ADD_EDIT_TASK,
                     arguments = listOf(navArgument("taskId") { type = NavType.LongType; defaultValue = -1L })
