@@ -17,6 +17,29 @@ class TaskRepository @Inject constructor(private val taskDao: TaskDao) {
     fun getTasksForDay(startOfDay: Long, endOfDay: Long): Flow<List<TaskEntity>> =
         taskDao.getTasksForDay(startOfDay, endOfDay)
 
+    // ── Fase 3: Smart Dashboard ─────────────────────────────────────────
+
+    fun getTotalFocusMinutesToday(startOfDay: Long, endOfDay: Long): Flow<Int> =
+        taskDao.getTotalFocusMinutesToday(startOfDay, endOfDay)
+
+    fun getPomodoroCountToday(startOfDay: Long, endOfDay: Long): Flow<Int> =
+        taskDao.getPomodoroCountToday(startOfDay, endOfDay)
+
+    fun getProcrastinatedTasks(): Flow<List<TaskEntity>> =
+        taskDao.getProcrastinatedTasks()
+
+    fun getCompletedWithEnergySince(since: Long): Flow<List<TaskEntity>> =
+        taskDao.getCompletedWithEnergySince(since)
+
+    fun getTopPendingHighPriority(): Flow<List<TaskEntity>> =
+        taskDao.getTopPendingHighPriority()
+
+    fun getPendingTasksForDay(startOfDay: Long, endOfDay: Long): Flow<List<TaskEntity>> =
+        taskDao.getPendingTasksForDay(startOfDay, endOfDay)
+
+    fun getCompletedCountToday(startOfDay: Long, endOfDay: Long): Flow<Int> =
+        taskDao.getCompletedCountToday(startOfDay, endOfDay)
+
     suspend fun insert(task: TaskEntity) {
         taskDao.insertTask(task)
     }

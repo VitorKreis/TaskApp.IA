@@ -12,5 +12,15 @@ data class TaskEntity(
     val isDone: Boolean,
     val dueDate: Long?,
     val startTime: Long? = null,
-    val endTime: Long? = null
+    val endTime: Long? = null,
+    // Feature 1: Focus Timer
+    val estimatedMinutes: Int? = null,
+    val actualMinutes: Int = 0,
+    // Feature 2: Snooze Tracker
+    val postponedCount: Int = 0,
+    // Feature 3: Effort Feedback
+    val energyLevel: Int? = null,
+    val completedAt: Long? = null,
+    // Feature 4: Tags
+    val tags: List<String> = emptyList()
 )

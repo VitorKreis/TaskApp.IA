@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -22,7 +23,9 @@ import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -43,9 +46,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.myapplication.data.local.entity.TaskEntity
 import com.example.myapplication.presentation.viewmodel.TaskViewModel
 import com.example.myapplication.ui.components.DarkDatePickerDialog
@@ -89,9 +95,18 @@ fun AddEditTaskScreen(
     var startTime by rememberSaveable { mutableLongStateOf(-1L) }
     var endTime by rememberSaveable { mutableLongStateOf(-1L) }
     var isDone by rememberSaveable { mutableStateOf(false) }
+    var estimatedMinutes by rememberSaveable { mutableStateOf<Int?>(null) }
+    var actualMinutes by rememberSaveable { mutableIntStateOf(0) }
+    var postponedCount by rememberSaveable { mutableIntStateOf(0) }
+    var originalDueDate by rememberSaveable { mutableLongStateOf(-1L) }
     var titleError by remember { mutableStateOf(false) }
     var dateError by remember { mutableStateOf<String?>(null) }
     var loaded by rememberSaveable { mutableStateOf(false) }
+
+    // Feature 1: Timer state
+    val timerTaskId by viewModel.timerTaskId.collectAsStateWithLifecycle()
+    val timerElapsed by viewModel.timerElapsedSeconds.collectAsStateWithLifecycle()
+    val isTimerRunning = timerTaskId == taskId
 
     // Picker dialog states
     var showDueDatePicker by remember { mutableStateOf(false) }
@@ -104,7 +119,6 @@ fun AddEditTaskScreen(
 
     LaunchedEffect(taskId) {
         if (isEditing && !loaded) {
-            // Preenche o formulário uma única vez ao abrir em modo edição.
             viewModel.getTaskById(taskId)?.let { task ->
                 title = task.title
                 description = task.description
@@ -113,6 +127,10 @@ fun AddEditTaskScreen(
                 startTime = task.startTime ?: -1L
                 endTime = task.endTime ?: -1L
                 isDone = task.isDone
+                estimatedMinutes = task.estimatedMinutes
+                actualMinutes = task.actualMinutes
+                postponedCount = task.postponedCount
+                originalDueDate = task.dueDate ?: -1L
             }
             loaded = true
         }
@@ -121,7 +139,6 @@ fun AddEditTaskScreen(
     fun validateDates(): Boolean {
         val now = System.currentTimeMillis()
         if (!isEditing) {
-            // Na criação, bloqueia datas passadas para evitar tarefas já vencidas ao nascer.
             if (dueDate > 0 && dueDate < now) {
                 dateError = "O prazo nao pode ser no passado"
                 return false
@@ -228,7 +245,10 @@ fun AddEditTaskScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(onClick = {
+                        if (isTimerRunning) viewModel.stopTimer()
+                        onNavigateBack()
+                    }) {
                         Icon(Icons.Default.Close, "Fechar", tint = TextPrimary)
                     }
                 },
@@ -251,7 +271,7 @@ fun AddEditTaskScreen(
             DarkTextField(
                 value = title,
                 onValueChange = { title = it; titleError = false },
-                label = "O que precisa ser feito? *",
+                label = "O que precisa ser feito? * (use #tag para categorizar)",
                 isError = titleError,
                 supportingText = if (titleError) {
                     { Text("Titulo obrigatorio", color = OverdueRed) }
@@ -438,6 +458,140 @@ fun AddEditTaskScreen(
                 }
             }
 
+            // -- Estimated Time --
+            GlassmorphismCard {
+                Column {
+                    Text("Tempo Estimado", style = MaterialTheme.typography.titleMedium, color = TextPrimary)
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        "Quanto tempo voce acha que essa tarefa vai levar?",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = TextSecondary.copy(alpha = 0.6f)
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.Schedule, null, tint = Purple, modifier = Modifier.size(24.dp))
+                        Spacer(Modifier.width(12.dp))
+                        DarkTextField(
+                            value = estimatedMinutes?.toString() ?: "",
+                            onValueChange = { input ->
+                                estimatedMinutes = input.filter { it.isDigit() }.takeIf { it.isNotEmpty() }?.toIntOrNull()
+                            },
+                            label = "Minutos",
+                            modifier = Modifier.weight(1f)
+                        )
+                        if (estimatedMinutes != null) {
+                            Spacer(Modifier.width(8.dp))
+                            val h = estimatedMinutes!! / 60
+                            val m = estimatedMinutes!! % 60
+                            val txt = when {
+                                h > 0 && m > 0 -> "${h}h ${m}min"
+                                h > 0 -> "${h}h"
+                                else -> "${m}min"
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(Purple.copy(alpha = 0.15f))
+                                    .padding(horizontal = 12.dp, vertical = 6.dp)
+                            ) {
+                                Text(txt, style = MaterialTheme.typography.labelLarge, color = PurpleBright)
+                            }
+                        }
+                    }
+                }
+            }
+
+            // -- Feature 1: Focus Timer (only in edit mode) --
+            if (isEditing && !isDone) {
+                GlassmorphismCard {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("Cronometro de Foco", style = MaterialTheme.typography.titleMedium, color = TextPrimary)
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            "Meca o tempo real gasto nesta tarefa",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = TextSecondary.copy(alpha = 0.6f)
+                        )
+                        Spacer(Modifier.height(16.dp))
+
+                        // Timer display
+                        val displaySeconds = if (isTimerRunning) timerElapsed else 0L
+                        val timerH = displaySeconds / 3600
+                        val timerM = (displaySeconds % 3600) / 60
+                        val timerS = displaySeconds % 60
+                        Text(
+                            text = "%02d:%02d:%02d".format(timerH, timerM, timerS),
+                            style = MaterialTheme.typography.headlineLarge.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 48.sp
+                            ),
+                            color = if (isTimerRunning) PurpleBright else TextSecondary
+                        )
+
+                        Spacer(Modifier.height(16.dp))
+
+                        // Start/Stop button
+                        Row(
+                            horizontalArrangement = Arrangement.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(64.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                        Brush.horizontalGradient(
+                                            if (isTimerRunning) listOf(PriorityHigh, PriorityUrgent)
+                                            else listOf(DarkGreen, Purple)
+                                        )
+                                    )
+                                    .clickable {
+                                        if (isTimerRunning) viewModel.stopTimer()
+                                        else viewModel.startTimer(taskId)
+                                    },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = if (isTimerRunning) Icons.Default.Stop else Icons.Default.PlayArrow,
+                                    contentDescription = if (isTimerRunning) "Parar" else "Iniciar",
+                                    tint = TextPrimary,
+                                    modifier = Modifier.size(32.dp)
+                                )
+                            }
+                        }
+
+                        Spacer(Modifier.height(12.dp))
+
+                        // Accumulated time
+                        if (actualMinutes > 0) {
+                            val accH = actualMinutes / 60
+                            val accM = actualMinutes % 60
+                            val accText = when {
+                                accH > 0 && accM > 0 -> "${accH}h ${accM}min"
+                                accH > 0 -> "${accH}h"
+                                else -> "${accM}min"
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(Purple.copy(alpha = 0.15f))
+                                    .padding(horizontal = 12.dp, vertical = 6.dp)
+                            ) {
+                                Text(
+                                    "Tempo acumulado: $accText",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = PurpleBright
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
             // -- Date Error --
             if (dateError != null) {
                 Box(
@@ -459,7 +613,16 @@ fun AddEditTaskScreen(
                     if (title.isBlank()) { titleError = true; return@GradientButton }
                     if (!validateDates()) return@GradientButton
 
-                    // Converte valores "não definidos" (-1) para null antes de persistir no Room.
+                    // Feature 2: Detecta adiamento (dueDate movida para o futuro)
+                    val newPostponedCount = if (isEditing && dueDate > 0 && originalDueDate > 0 && dueDate > originalDueDate) {
+                        postponedCount + 1
+                    } else {
+                        postponedCount
+                    }
+
+                    // Feature 4: Extrai tags do titulo
+                    val extractedTags = viewModel.extractTags(title.trim())
+
                     val task = TaskEntity(
                         id = if (isEditing) taskId else 0,
                         title = title.trim(),
@@ -468,7 +631,11 @@ fun AddEditTaskScreen(
                         isDone = isDone,
                         dueDate = if (dueDate > 0) dueDate else null,
                         startTime = if (startTime > 0) startTime else null,
-                        endTime = if (endTime > 0) endTime else null
+                        endTime = if (endTime > 0) endTime else null,
+                        estimatedMinutes = estimatedMinutes,
+                        actualMinutes = actualMinutes,
+                        postponedCount = newPostponedCount,
+                        tags = extractedTags
                     )
                     if (isEditing) viewModel.update(task) else viewModel.insert(task)
                     onNavigateBack()

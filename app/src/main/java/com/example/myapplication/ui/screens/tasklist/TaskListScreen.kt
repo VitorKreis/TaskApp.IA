@@ -16,8 +16,10 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Inbox
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -27,6 +29,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -36,6 +39,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.myapplication.data.local.entity.TaskEntity
 import com.example.myapplication.presentation.viewmodel.TaskViewModel
 import com.example.myapplication.ui.components.AnimatedChip
+import com.example.myapplication.ui.components.EnergyFeedbackSheet
 import com.example.myapplication.ui.components.GradientFAB
 import com.example.myapplication.ui.components.TaskCard
 import com.example.myapplication.ui.theme.*
@@ -53,16 +57,23 @@ fun TaskListScreen(
     viewModel: TaskViewModel,
     initialFilter: Int = 0,
     onNavigateToAddTask: () -> Unit,
-    onNavigateToEditTask: (Long) -> Unit
+    onNavigateToEditTask: (Long) -> Unit,
+    onNavigateToPomodoro: () -> Unit = {}
 ) {
     val allTasks by viewModel.allTasks.collectAsStateWithLifecycle()
+    val allTags by viewModel.allTags.collectAsStateWithLifecycle()
     // Mantém contrato de índice com Dashboard/NavGraph: 0=ACTIVE, 1=ALL, 2=DONE, 3=OVERDUE.
     var selectedFilter by remember { mutableIntStateOf(initialFilter) }
+    var selectedTag by remember { mutableStateOf<String?>(null) }
     val now = System.currentTimeMillis()
 
-    val filteredTasks by remember(allTasks, selectedFilter) {
+    // Feature 3: Energy feedback state
+    var showEnergySheet by remember { mutableStateOf(false) }
+    var pendingCompleteTask by remember { mutableStateOf<TaskEntity?>(null) }
+
+    val filteredTasks by remember(allTasks, selectedFilter, selectedTag) {
         derivedStateOf {
-            when (TaskFilter.entries[selectedFilter]) {
+            val byFilter = when (TaskFilter.entries[selectedFilter]) {
                 TaskFilter.ACTIVE -> allTasks.filter { !it.isDone }
                 TaskFilter.ALL -> allTasks
                 TaskFilter.DONE -> allTasks.filter { it.isDone }
@@ -70,13 +81,44 @@ fun TaskListScreen(
                     !it.isDone && it.dueDate != null && it.dueDate < now
                 }
             }
+            // Feature 4: Tag filter
+            if (selectedTag != null) {
+                byFilter.filter { it.tags.contains(selectedTag) }
+            } else {
+                byFilter
+            }
         }
+    }
+
+    // Feature 3: Energy feedback BottomSheet
+    if (showEnergySheet && pendingCompleteTask != null) {
+        EnergyFeedbackSheet(
+            taskTitle = pendingCompleteTask!!.title,
+            onSelect = { level ->
+                viewModel.completeWithEnergy(pendingCompleteTask!!, level)
+                showEnergySheet = false
+                pendingCompleteTask = null
+            },
+            onDismiss = {
+                showEnergySheet = false
+                pendingCompleteTask = null
+            }
+        )
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Tarefas", color = TextPrimary) },
+                actions = {
+                    IconButton(onClick = onNavigateToPomodoro) {
+                        Icon(
+                            imageVector = Icons.Default.Timer,
+                            contentDescription = "Pomodoro",
+                            tint = PriorityHigh
+                        )
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = DarkBg)
             )
         },
@@ -90,6 +132,26 @@ fun TaskListScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
+            // ── Feature 4: Tag Chips ───────────────────────────────────
+            if (allTags.isNotEmpty()) {
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    items(allTags) { tag ->
+                        AnimatedChip(
+                            label = tag,
+                            selected = selectedTag == tag,
+                            onClick = {
+                                selectedTag = if (selectedTag == tag) null else tag
+                            }
+                        )
+                    }
+                }
+                Spacer(Modifier.height(8.dp))
+            }
+
             // ── Filter Chips ───────────────────────────────────────────
             LazyRow(
                 contentPadding = PaddingValues(horizontal = 16.dp),
@@ -150,7 +212,13 @@ fun TaskListScreen(
                             TaskCard(
                                 task = task,
                                 onToggle = {
-                                    viewModel.update(it.copy(isDone = !it.isDone))
+                                    if (!it.isDone) {
+                                        // Feature 3: Interceptar — pedir nível de energia
+                                        pendingCompleteTask = it
+                                        showEnergySheet = true
+                                    } else {
+                                        viewModel.uncomplete(it)
+                                    }
                                 },
                                 onEdit = { onNavigateToEditTask(it.id) },
                                 onDelete = { viewModel.delete(it) }

@@ -26,12 +26,14 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.myapplication.presentation.viewmodel.CalendarViewModel
 import com.example.myapplication.presentation.viewmodel.DashboardViewModel
+import com.example.myapplication.presentation.viewmodel.PomodoroViewModel
 import com.example.myapplication.presentation.viewmodel.TaskViewModel
 import com.example.myapplication.ui.components.BottomNavBar
 import com.example.myapplication.ui.components.BottomNavItem
 import com.example.myapplication.ui.screens.addedittask.AddEditTaskScreen
 import com.example.myapplication.ui.screens.calendar.CalendarScreen
 import com.example.myapplication.ui.screens.dashboard.DashboardScreen
+import com.example.myapplication.ui.screens.pomodoro.PomodoroScreen
 import com.example.myapplication.ui.screens.tasklist.TaskListScreen
 
 object Routes {
@@ -40,6 +42,7 @@ object Routes {
     const val TASK_LIST = "taskList/{filter}"
     const val CALENDAR = "calendar"
     const val ADD_EDIT_TASK = "addEditTask/{taskId}"
+    const val POMODORO = "pomodoro"
 
     fun taskList(filter: Int = 0) = "taskList/$filter"
     fun addEditTask(taskId: Long = -1L) = "addEditTask/$taskId"
@@ -114,7 +117,8 @@ fun NavGraph() {
                             }
                         },
                         onNavigateToAddTask = { navController.navigate(Routes.addEditTask()) },
-                        onNavigateToEditTask = { id -> navController.navigate(Routes.addEditTask(id)) }
+                        onNavigateToEditTask = { id -> navController.navigate(Routes.addEditTask(id)) },
+                        onNavigateToPomodoro = { navController.navigate(Routes.POMODORO) }
                     )
                 }
 
@@ -129,7 +133,8 @@ fun NavGraph() {
                         viewModel = viewModel,
                         initialFilter = filter,
                         onNavigateToAddTask = { navController.navigate(Routes.addEditTask()) },
-                        onNavigateToEditTask = { id -> navController.navigate(Routes.addEditTask(id)) }
+                        onNavigateToEditTask = { id -> navController.navigate(Routes.addEditTask(id)) },
+                        onNavigateToPomodoro = { navController.navigate(Routes.POMODORO) }
                     )
                 }
 
@@ -153,6 +158,15 @@ fun NavGraph() {
                     AddEditTaskScreen(
                         viewModel = viewModel,
                         taskId = taskId,
+                        onNavigateBack = { navController.popBackStack() }
+                    )
+                }
+
+                // Pomodoro
+                composable(Routes.POMODORO) {
+                    val viewModel: PomodoroViewModel = hiltViewModel()
+                    PomodoroScreen(
+                        viewModel = viewModel,
                         onNavigateBack = { navController.popBackStack() }
                     )
                 }
