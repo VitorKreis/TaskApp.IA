@@ -81,7 +81,8 @@ dependencies {
 
     // ── WorkManager ────────────────────────────────────────────────────────
     implementation(libs.androidx.work.runtime)
-
+    // ── DataStore ──────────────────────────────────────────────────────────
+    implementation(libs.androidx.datastore.preferences)
     // ── MPAndroidChart ─────────────────────────────────────────────────────
     implementation(libs.mpandroidchart)
 

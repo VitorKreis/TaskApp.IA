@@ -3,6 +3,9 @@ package com.example.myapplication.di
 import android.content.Context
 import com.example.myapplication.data.local.dao.TaskDao
 import com.example.myapplication.data.local.database.AppDatabase
+import com.example.myapplication.data.local.preferences.RoutinePreferences
+import com.example.myapplication.data.local.preferences.WakeUpPreferences
+import com.example.myapplication.data.repository.RoutineRepository
 import com.example.myapplication.data.repository.TaskRepository
 import dagger.Module
 import dagger.Provides
@@ -31,5 +34,23 @@ object DatabaseModule {
     @Singleton
     fun provideTaskRepository(taskDao: TaskDao): TaskRepository {
         return TaskRepository(taskDao)
+    }
+
+    @Provides
+    @Singleton
+    fun provideWakeUpPreferences(@ApplicationContext context: Context): WakeUpPreferences {
+        return WakeUpPreferences(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideRoutinePreferences(@ApplicationContext context: Context): RoutinePreferences {
+        return RoutinePreferences(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideRoutineRepository(routinePreferences: RoutinePreferences): RoutineRepository {
+        return RoutineRepository(routinePreferences)
     }
 }

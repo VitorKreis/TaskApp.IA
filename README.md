@@ -51,6 +51,31 @@ O app funciona de forma local/offline, armazenando todos os dados no dispositivo
 - **Tarefas do Dia**: Lista filtrada por tags com chips interativos.
 - **FAB Expansível**: Menu com 2 opções — "Nova Tarefa" e "Foco Rápido (Pomodoro)".
 
+### Fase 4 — Preferências de Rotina e Notificações Inteligentes ✅
+
+#### Feature 7: Preferências de Rotina (DataStore)
+- **Horário de Planejamento**: define a hora da notificação diária de briefing matinal.
+- **Janela de Silêncio (Quiet Hours)**: intervalo de horas em que notificações são suprimidas — suporta janelas que cruzam a meia-noite.
+- **Pico de Foco**: enum `MORNING`, `AFTERNOON`, `EVENING` ou `CUSTOM` com horário personalizado.
+- Persistência via Jetpack DataStore Preferences com `Flow` reativo.
+
+#### Feature 8: Tela de Configurações de Rotina
+- Tela dedicada acessível via ícone de ⚙️ no Dashboard.
+- 3 seções com cards estilizados (tema escuro):
+  - **Horário de Planejamento** — TimePicker.
+  - **Janela de Silêncio** — TimePickers para início e fim.
+  - **Pico de Foco** — FilterChips (Manhã / Tarde / Noite / Personalizado).
+
+#### Feature 9: Agendamento Inteligente de Alarmes
+- `AlarmScheduler` agenda alarmes exatos diários via `AlarmManager.setExactAndAllowWhileIdle`.
+- `BootReceiver` reagenda o alarme automaticamente após reinício do dispositivo.
+- O alarme é reagendado sempre que o horário de planejamento é alterado nas configurações.
+
+#### Feature 10: Notificações com Quiet Hours
+- `NotificationHelper` centraliza criação e envio de notificações.
+- Guard de Quiet Hours: verifica `RoutinePreferences` antes de disparar qualquer notificação.
+- **Morning Briefing**: notificação contextual em português com contagem de tarefas pendentes, atrasadas e do dia — consulta o Room em tempo real.
+
 ---
 
 ### Tarefas (CRUD base)
@@ -99,6 +124,8 @@ O app funciona de forma local/offline, armazenando todos os dados no dispositivo
 | Navegação | Navigation Compose |
 | DI | Hilt |
 | Banco de Dados | Room (SQLite) — com migrations 1→2→3 |
+| Preferências | Jetpack DataStore Preferences |
+| Notificações | AlarmManager + NotificationCompat |
 | Async | Kotlin Coroutines + StateFlow |
 | Gráficos | MPAndroidChart |
 
@@ -109,23 +136,26 @@ TaskApp.IA/
 ├── app/src/main/java/com/example/myapplication/
 │   ├── data/
 │   │   ├── local/
-│   │   │   ├── dao/          # TaskDao — queries Room (CRUD + insights)
-│   │   │   ├── database/     # AppDatabase, Converters, Migrations
-│   │   │   └── entity/       # TaskEntity (com campos de ML)
-│   │   └── repository/       # TaskRepository
-│   ├── di/                    # DatabaseModule (Hilt)
+│   │   │   ├── dao/            # TaskDao — queries Room (CRUD + insights)
+│   │   │   ├── database/       # AppDatabase, Converters, Migrations
+│   │   │   ├── entity/         # TaskEntity (com campos de ML)
+│   │   │   └── preferences/    # RoutinePreferences, WakeUpPreferences (DataStore)
+│   │   └── repository/         # TaskRepository, RoutineRepository
+│   ├── di/                      # DatabaseModule (Hilt)
+│   ├── notification/            # AlarmScheduler, BootReceiver, MorningNotificationReceiver, NotificationHelper
 │   ├── presentation/
-│   │   └── viewmodel/        # TaskViewModel, DashboardViewModel, PomodoroViewModel, CalendarViewModel
+│   │   └── viewmodel/          # TaskViewModel, DashboardViewModel, PomodoroViewModel, CalendarViewModel, RoutineViewModel, NotificationViewModel
 │   └── ui/
-│       ├── components/        # TaskCard, GlassmorphismCard, GradientButton, EnergyFeedbackSheet, etc.
-│       ├── navigation/        # NavGraph + Routes
+│       ├── components/          # TaskCard, GlassmorphismCard, GradientButton, WakeUpTimeDialog, etc.
+│       ├── navigation/          # NavGraph + Routes
 │       ├── screens/
-│       │   ├── addedittask/   # AddEditTaskScreen (com timer de foco)
-│       │   ├── calendar/      # CalendarScreen
-│       │   ├── dashboard/     # DashboardScreen (Smart Dashboard)
-│       │   ├── pomodoro/      # PomodoroScreen
-│       │   └── tasklist/      # TaskListScreen
-│       └── theme/             # Color, Theme, Typography
+│       │   ├── addedittask/     # AddEditTaskScreen (com timer de foco)
+│       │   ├── calendar/        # CalendarScreen
+│       │   ├── dashboard/       # DashboardScreen (Smart Dashboard)
+│       │   ├── pomodoro/        # PomodoroScreen
+│       │   ├── settings/        # RoutineSettingsScreen
+│       │   └── tasklist/        # TaskListScreen
+│       └── theme/               # Color, Theme, Typography
 ├── gradle/libs.versions.toml
 └── README.md
 ```
@@ -182,8 +212,8 @@ No Windows PowerShell:
 - [x] Fase 1: Coleta de Dados (Features 1-4)
 - [x] Fase 2: Modo Pomodoro Nativo (Feature 5)
 - [x] Fase 3: Smart Dashboard (Feature 6)
-- [ ] Fase 4: Motor de Recomendação Local (IA baseada em heurísticas)
-- [ ] Fase 5: Notificações inteligentes
+- [x] Fase 4: Preferências de Rotina e Notificações Inteligentes (Features 7-10)
+- [ ] Fase 5: Motor de Recomendação Local (IA baseada em heurísticas)
 - [ ] Fase 6: Sincronização em nuvem
 
 ## Contribuição

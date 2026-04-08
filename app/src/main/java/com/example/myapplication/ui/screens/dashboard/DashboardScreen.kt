@@ -31,13 +31,16 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Alarm
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.PendingActions
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -63,11 +66,13 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.myapplication.data.local.entity.TaskEntity
 import com.example.myapplication.presentation.viewmodel.DashboardViewModel
+import com.example.myapplication.presentation.viewmodel.NotificationViewModel
 import com.example.myapplication.ui.components.AnimatedChip
 import com.example.myapplication.ui.components.GlassmorphismCard
 import com.example.myapplication.ui.components.GradientButton
 import com.example.myapplication.ui.components.GradientProgressBar
 import com.example.myapplication.ui.components.TaskCard
+import com.example.myapplication.ui.components.WakeUpTimeDialog
 import com.example.myapplication.ui.theme.*
 import com.github.mikephil.charting.charts.PieChart
 import com.github.mikephil.charting.data.PieData
@@ -79,10 +84,12 @@ import kotlinx.coroutines.delay
 @Composable
 fun DashboardScreen(
     viewModel: DashboardViewModel,
+    notificationViewModel: NotificationViewModel,
     onNavigateToTaskList: (filter: Int) -> Unit,
     onNavigateToAddTask: () -> Unit,
     onNavigateToEditTask: (Long) -> Unit,
-    onNavigateToPomodoro: () -> Unit = {}
+    onNavigateToPomodoro: () -> Unit = {},
+    onNavigateToSettings: () -> Unit = {}
 ) {
     // ── Dados existentes ────────────────────────────────────────────────
     val totalCount by viewModel.totalCount.collectAsStateWithLifecycle()
@@ -103,6 +110,9 @@ fun DashboardScreen(
 
     var selectedTag by remember { mutableStateOf<String?>(null) }
     var fabExpanded by remember { mutableStateOf(false) }
+    var showWakeUpDialog by remember { mutableStateOf(false) }
+
+    val wakeUpTime by notificationViewModel.wakeUpTime.collectAsStateWithLifecycle()
 
     val filteredTodayTasks by remember(pendingTasksToday, selectedTag) {
         derivedStateOf {
@@ -114,6 +124,19 @@ fun DashboardScreen(
     var visible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { delay(100); visible = true }
 
+    // ── Wake-Up Time Dialog ─────────────────────────────────────────────
+    if (showWakeUpDialog) {
+        WakeUpTimeDialog(
+            currentHour = wakeUpTime.first,
+            currentMinute = wakeUpTime.second,
+            onConfirm = { hour, minute ->
+                notificationViewModel.setWakeUpTime(hour, minute)
+                showWakeUpDialog = false
+            },
+            onDismiss = { showWakeUpDialog = false }
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -123,6 +146,22 @@ fun DashboardScreen(
                         style = MaterialTheme.typography.headlineMedium,
                         color = TextPrimary
                     )
+                },
+                actions = {
+                    IconButton(onClick = onNavigateToSettings) {
+                        Icon(
+                            Icons.Default.Settings,
+                            contentDescription = "Rotina e Preferências",
+                            tint = TextPrimary
+                        )
+                    }
+                    IconButton(onClick = { showWakeUpDialog = true }) {
+                        Icon(
+                            Icons.Default.Alarm,
+                            contentDescription = "Notificações Matinais",
+                            tint = TextPrimary
+                        )
+                    }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = DarkBg)
             )
