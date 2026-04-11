@@ -1,11 +1,44 @@
-# TaskApp.IA
+<h1 align="center">📱 TaskApp.IA</h1>
+<p align="center">
+  <strong>Aplicativo Android de produtividade com Inteligência Artificial local</strong>
+</p>
+<p align="center">
+  Vai além do to-do list: aprende com seu comportamento, identifica padrões de produtividade e oferece sugestões personalizadas — 100% offline.
+</p>
 
-Aplicativo Android para gestão de tarefas com inteligência local, foco em produtividade e coleta de dados comportamentais — 100% offline usando Room Database.
+<p align="center">
+  <img src="https://img.shields.io/badge/Kotlin-2.0-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white" alt="Kotlin"/>
+  <img src="https://img.shields.io/badge/Android-SDK%2026+-3DDC84?style=for-the-badge&logo=android&logoColor=white" alt="Android"/>
+  <img src="https://img.shields.io/badge/Jetpack%20Compose-Material3-4285F4?style=for-the-badge&logo=jetpackcompose&logoColor=white" alt="Jetpack Compose"/>
+  <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge" alt="License"/>
+  <img src="https://img.shields.io/badge/Status-Em%20Desenvolvimento-orange?style=for-the-badge" alt="Status"/>
+</p>
+
+---
+
+## 📖 Sobre o Projeto
+
+O **TaskApp.IA** é um aplicativo Android de gestão de tarefas que vai além do simples to-do list. Desenvolvido em **Kotlin com Jetpack Compose**, o app coleta dados comportamentais do usuário (tempo de foco, adiamentos, nível de energia) para, futuramente, oferecer recomendações inteligentes personalizadas usando IA local.
+
+**Arquitetura:** UI → ViewModel → Repository → Room (MVVM limpo com Hilt)  
+**Diferenciais:** 100% offline, tema escuro com glassmorphism, modo Pomodoro nativo, Smart Dashboard e notificações inteligentes com Quiet Hours.
+
+---
 
 ## Visão geral
 
 O projeto foi desenvolvido em Kotlin com Jetpack Compose e arquitetura em camadas (UI → ViewModel → Repository → Room).  
 O app funciona de forma local/offline, armazenando todos os dados no dispositivo.
+
+---
+
+## 📱 Screenshots
+
+> *Screenshots serão adicionados em breve.*
+
+| Dashboard | Lista de Tarefas | Pomodoro | Calendário |
+|-----------|-----------------|----------|-----------|
+| ![Dashboard](docs/screenshots/dashboard.png) | ![Tasks](docs/screenshots/tasks.png) | ![Pomodoro](docs/screenshots/pomodoro.png) | ![Calendar](docs/screenshots/calendar.png) |
 
 ---
 
@@ -222,6 +255,21 @@ No Windows PowerShell:
 2. Faça commits pequenos e descritivos.
 3. Abra um Pull Request com contexto da mudança.
 
-## Licença
+## 📄 Licença
 
-Projeto sob licença MIT.
+Distribuído sob a licença MIT. Veja `LICENSE` para mais informações.
+
+## 👨‍💻 Autor
+
+**Vitor K. Richter Alves**  
+[![GitHub](https://img.shields.io/badge/GitHub-VitorKreis-181717?style=flat&logo=github)](https://github.com/VitorKreis)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Vitor%20Kreis-0077B5?style=flat&logo=linkedin)](https://linkedin.com/in/vitor-kreis)
+[![Email](https://img.shields.io/badge/Email-vitor.1richter@gmail.com-D14836?style=flat&logo=gmail)](mailto:vitor.1richter@gmail.com)
+
+---
+
+## 🏷️ Tecnologias e Tópicos
+
+Este projeto utiliza: `android` · `kotlin` · `jetpack-compose` · `room-database` · `hilt` · `mvvm` · `productivity` · `ai` · `pomodoro`
+
+> 💡 Para melhorar a descoberta do repositório, adicione esses tópicos via **Settings → Topics** na interface do GitHub.
