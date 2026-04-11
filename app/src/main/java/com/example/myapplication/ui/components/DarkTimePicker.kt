@@ -37,16 +37,24 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.myapplication.ui.theme.*
+import java.util.Calendar
 
 @Composable
 fun DarkTimePickerDialog(
-    initialHour: Int = java.time.LocalTime.now().hour,
-    initialMinute: Int = java.time.LocalTime.now().minute,
+    initialHour: Int = -1,
+    initialMinute: Int = -1,
     onTimeSelected: (hour: Int, minute: Int) -> Unit,
     onDismiss: () -> Unit
 ) {
-    var selectedHour by remember { mutableIntStateOf(initialHour) }
-    var selectedMinute by remember { mutableIntStateOf(initialMinute) }
+    // Compute the fallback time atomically so both hour and minute come from
+    // the same Calendar instance (avoids a boundary mismatch if defaults are used).
+    val now = remember { Calendar.getInstance() }
+    var selectedHour by remember {
+        mutableIntStateOf(if (initialHour >= 0) initialHour else now.get(Calendar.HOUR_OF_DAY))
+    }
+    var selectedMinute by remember {
+        mutableIntStateOf(if (initialMinute >= 0) initialMinute else now.get(Calendar.MINUTE))
+    }
 
     Dialog(onDismissRequest = onDismiss) {
         Box(

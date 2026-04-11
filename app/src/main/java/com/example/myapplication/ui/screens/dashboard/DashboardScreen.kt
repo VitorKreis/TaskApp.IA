@@ -145,19 +145,21 @@ fun DashboardScreen(
     }
 
     // ── Energy Feedback Sheet ───────────────────────────────────────────
-    if (showEnergySheet && pendingCompleteTask != null) {
-        EnergyFeedbackSheet(
-            taskTitle = pendingCompleteTask!!.title,
-            onSelect = { level ->
-                taskViewModel.completeWithEnergy(pendingCompleteTask!!, level)
-                showEnergySheet = false
-                pendingCompleteTask = null
-            },
-            onDismiss = {
-                showEnergySheet = false
-                pendingCompleteTask = null
-            }
-        )
+    pendingCompleteTask?.let { taskToComplete ->
+        if (showEnergySheet) {
+            EnergyFeedbackSheet(
+                taskTitle = taskToComplete.title,
+                onSelect = { level ->
+                    taskViewModel.completeWithEnergy(taskToComplete, level)
+                    showEnergySheet = false
+                    pendingCompleteTask = null
+                },
+                onDismiss = {
+                    showEnergySheet = false
+                    pendingCompleteTask = null
+                }
+            )
+        }
     }
 
     Scaffold(
