@@ -4,7 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import com.example.myapplication.data.local.database.AppDatabase
-import com.example.myapplication.data.local.preferences.RoutinePreferences
+import com.example.myapplication.data.local.preferences.WakeUpPreferences
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -39,9 +39,9 @@ class MorningNotificationReceiver : BroadcastReceiver() {
                 // Dispatch via NotificationHelper (respects quiet hours)
                 NotificationHelper.sendMorningBriefing(context, todayCount, overdueCount)
 
-                // Reschedule for tomorrow
-                val prefs = RoutinePreferences(context)
-                val (hour, minute) = prefs.planningTime.first()
+                // Reschedule for tomorrow using the saved wake-up time
+                val prefs = WakeUpPreferences(context)
+                val (hour, minute) = prefs.wakeUpTime.first()
                 AlarmScheduler.schedule(context, hour, minute)
             } finally {
                 pendingResult.finish()

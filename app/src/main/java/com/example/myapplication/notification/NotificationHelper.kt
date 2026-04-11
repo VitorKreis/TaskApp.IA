@@ -5,6 +5,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import com.example.myapplication.MainActivity
@@ -25,6 +26,9 @@ object NotificationHelper {
     private const val MORNING_CHANNEL_ID = "morning_notification"
     private const val MORNING_NOTIFICATION_ID = 2001
 
+    /** Accent color for notifications (green, matching the app theme). */
+    private val ACCENT_COLOR = Color.parseColor("#1DB954")
+
     /**
      * Inicializa os canais de notificação. Chamar no Application ou quando necessário.
      */
@@ -38,6 +42,9 @@ object NotificationHelper {
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
                 description = "Resumo diário das suas tarefas ao acordar"
+                enableVibration(true)
+                enableLights(true)
+                lightColor = ACCENT_COLOR
             }
             manager.createNotificationChannel(morningChannel)
         }
@@ -76,22 +83,23 @@ object NotificationHelper {
 
         val totalPending = todayCount + overdueCount
 
+        val title = "TaskApp.IA ☀️ — Bom dia!"
         val message = when {
             totalPending == 0 ->
-                "Bom dia! Nenhuma tarefa pendente. Aproveite para planejar seu dia! ✨"
+                "Nenhuma tarefa pendente hoje. Aproveite para planejar seu dia! ✨"
             overdueCount > 0 && todayCount > 0 ->
-                "Bom dia! Você tem $todayCount tarefa(s) para hoje e $overdueCount atrasada(s). Vamos planejar? 📋"
+                "Você tem $todayCount tarefa(s) para hoje e $overdueCount atrasada(s). Vamos planejar? 📋"
             overdueCount > 0 ->
-                "Bom dia! Você tem $overdueCount tarefa(s) atrasada(s). Hora de resolver! ⚠️"
+                "Você tem $overdueCount tarefa(s) atrasada(s). Hora de resolver! ⚠️"
             else ->
-                "Bom dia! Você tem $todayCount tarefa(s) para hoje. Vamos planejar? 🚀"
+                "Você tem $todayCount tarefa(s) para hoje. Bora começar o dia! 🚀"
         }
 
         showNotification(
             context = context,
             channelId = MORNING_CHANNEL_ID,
             notificationId = MORNING_NOTIFICATION_ID,
-            title = "TaskApp.IA ☀️",
+            title = title,
             message = message
         )
         return true
@@ -141,11 +149,15 @@ object NotificationHelper {
             .setContentTitle(title)
             .setContentText(message)
             .setStyle(NotificationCompat.BigTextStyle().bigText(message))
+            .setColor(ACCENT_COLOR)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setCategory(NotificationCompat.CATEGORY_REMINDER)
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
+            .setVibrate(longArrayOf(0, 250, 100, 250))
             .build()
 
         manager.notify(notificationId, notification)
     }
 }
+

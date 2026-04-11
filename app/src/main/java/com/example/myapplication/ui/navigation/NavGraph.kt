@@ -112,9 +112,11 @@ fun NavGraph() {
                 composable(Routes.DASHBOARD) {
                     val viewModel: DashboardViewModel = hiltViewModel()
                     val notificationViewModel: NotificationViewModel = hiltViewModel()
+                    val taskViewModel: TaskViewModel = hiltViewModel()
                     DashboardScreen(
                         viewModel = viewModel,
                         notificationViewModel = notificationViewModel,
+                        taskViewModel = taskViewModel,
                         onNavigateToTaskList = { filter ->
                             navController.navigate(Routes.taskList(filter)) {
                                 popUpTo(navController.graph.findStartDestination().id) { saveState = true }

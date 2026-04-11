@@ -67,7 +67,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.myapplication.data.local.entity.TaskEntity
 import com.example.myapplication.presentation.viewmodel.DashboardViewModel
 import com.example.myapplication.presentation.viewmodel.NotificationViewModel
+import com.example.myapplication.presentation.viewmodel.TaskViewModel
 import com.example.myapplication.ui.components.AnimatedChip
+import com.example.myapplication.ui.components.EnergyFeedbackSheet
 import com.example.myapplication.ui.components.GlassmorphismCard
 import com.example.myapplication.ui.components.GradientButton
 import com.example.myapplication.ui.components.GradientProgressBar
@@ -85,6 +87,7 @@ import kotlinx.coroutines.delay
 fun DashboardScreen(
     viewModel: DashboardViewModel,
     notificationViewModel: NotificationViewModel,
+    taskViewModel: TaskViewModel,
     onNavigateToTaskList: (filter: Int) -> Unit,
     onNavigateToAddTask: () -> Unit,
     onNavigateToEditTask: (Long) -> Unit,
@@ -112,6 +115,10 @@ fun DashboardScreen(
     var fabExpanded by remember { mutableStateOf(false) }
     var showWakeUpDialog by remember { mutableStateOf(false) }
 
+    // Task completion with energy micro-feedback
+    var showEnergySheet by remember { mutableStateOf(false) }
+    var pendingCompleteTask by remember { mutableStateOf<TaskEntity?>(null) }
+
     val wakeUpTime by notificationViewModel.wakeUpTime.collectAsStateWithLifecycle()
 
     val filteredTodayTasks by remember(pendingTasksToday, selectedTag) {
@@ -134,6 +141,22 @@ fun DashboardScreen(
                 showWakeUpDialog = false
             },
             onDismiss = { showWakeUpDialog = false }
+        )
+    }
+
+    // ── Energy Feedback Sheet ───────────────────────────────────────────
+    if (showEnergySheet && pendingCompleteTask != null) {
+        EnergyFeedbackSheet(
+            taskTitle = pendingCompleteTask!!.title,
+            onSelect = { level ->
+                taskViewModel.completeWithEnergy(pendingCompleteTask!!, level)
+                showEnergySheet = false
+                pendingCompleteTask = null
+            },
+            onDismiss = {
+                showEnergySheet = false
+                pendingCompleteTask = null
+            }
         )
     }
 
@@ -408,7 +431,14 @@ fun DashboardScreen(
                     ) {
                         TaskCard(
                             task = task,
-                            onToggle = {},
+                            onToggle = {
+                                if (!it.isDone) {
+                                    pendingCompleteTask = it
+                                    showEnergySheet = true
+                                } else {
+                                    taskViewModel.uncomplete(it)
+                                }
+                            },
                             onEdit = { onNavigateToEditTask(it.id) },
                             onDelete = {}
                         )
@@ -461,7 +491,14 @@ fun DashboardScreen(
                 items(filteredTodayTasks, key = { "today_${it.id}" }) { task ->
                     TaskCard(
                         task = task,
-                        onToggle = {},
+                        onToggle = {
+                            if (!it.isDone) {
+                                pendingCompleteTask = it
+                                showEnergySheet = true
+                            } else {
+                                taskViewModel.uncomplete(it)
+                            }
+                        },
                         onEdit = { onNavigateToEditTask(it.id) },
                         onDelete = {}
                     )
@@ -480,7 +517,14 @@ fun DashboardScreen(
                 items(overdueTasks, key = { "overdue_${it.id}" }) { task ->
                     TaskCard(
                         task = task,
-                        onToggle = {},
+                        onToggle = {
+                            if (!it.isDone) {
+                                pendingCompleteTask = it
+                                showEnergySheet = true
+                            } else {
+                                taskViewModel.uncomplete(it)
+                            }
+                        },
                         onEdit = { onNavigateToEditTask(it.id) },
                         onDelete = {}
                     )
