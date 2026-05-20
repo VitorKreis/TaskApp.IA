@@ -3,7 +3,7 @@ package com.example.myapplication.notification
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import com.example.myapplication.data.local.preferences.RoutinePreferences
+import com.example.myapplication.data.local.preferences.WakeUpPreferences
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -16,8 +16,8 @@ class BootReceiver : BroadcastReceiver() {
         val pendingResult = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val prefs = RoutinePreferences(context)
-                val (hour, minute) = prefs.planningTime.first()
+                val prefs = WakeUpPreferences(context)
+                val (hour, minute) = prefs.wakeUpTime.first()
                 AlarmScheduler.schedule(context, hour, minute)
             } finally {
                 pendingResult.finish()

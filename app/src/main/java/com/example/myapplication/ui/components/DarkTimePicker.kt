@@ -37,16 +37,24 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.myapplication.ui.theme.*
+import java.util.Calendar
 
 @Composable
 fun DarkTimePickerDialog(
-    initialHour: Int = 12,
-    initialMinute: Int = 0,
+    initialHour: Int = -1,
+    initialMinute: Int = -1,
     onTimeSelected: (hour: Int, minute: Int) -> Unit,
     onDismiss: () -> Unit
 ) {
-    var selectedHour by remember { mutableIntStateOf(initialHour) }
-    var selectedMinute by remember { mutableIntStateOf(initialMinute) }
+    // Compute the fallback time atomically so both hour and minute come from
+    // the same Calendar instance (avoids a boundary mismatch if defaults are used).
+    val now = remember { Calendar.getInstance() }
+    var selectedHour by remember {
+        mutableIntStateOf(if (initialHour >= 0) initialHour else now.get(Calendar.HOUR_OF_DAY))
+    }
+    var selectedMinute by remember {
+        mutableIntStateOf(if (initialMinute >= 0) initialMinute else now.get(Calendar.MINUTE))
+    }
 
     Dialog(onDismissRequest = onDismiss) {
         Box(
@@ -159,14 +167,19 @@ private fun ScrollWheel(
 ) {
     val itemHeight = 48.dp
     val visibleItems = 5
-    val listState = rememberLazyListState(initialFirstVisibleItemIndex = maxOf(0, initialIndex - visibleItems / 2))
+    // The LazyList starts with (visibleItems/2) top-padding items, then the actual items.
+    // To center items[initialIndex] visually, the first visible LazyList position must be
+    // `initialIndex` (so that the item at position initialIndex + visibleItems/2 is centered).
+    val listState = rememberLazyListState(initialFirstVisibleItemIndex = initialIndex)
 
     val centeredIndex by remember {
         derivedStateOf {
             val first = listState.firstVisibleItemIndex
             val offset = listState.firstVisibleItemScrollOffset
             val halfItem = 60 // approximate half item height in pixels
-            first + visibleItems / 2 + if (offset > halfItem) 1 else 0
+            // centeredIndex is an index into `items`. The top-padding takes up (visibleItems/2)
+            // LazyList positions, so the items array index = first + (offset > halfItem ? 1 : 0).
+            first + if (offset > halfItem) 1 else 0
         }
     }
 
